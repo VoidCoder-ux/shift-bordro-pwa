@@ -16,6 +16,7 @@ body {
   min-width: 320px;
   background: #f8fafc;
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 button,
@@ -27,27 +28,44 @@ textarea {
 
 .app-shell {
   padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  overflow-x: hidden;
 }
 
 @layer components {
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-[0.99];
+    @apply inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-sm font-extrabold leading-tight text-slate-900 transition hover:bg-slate-50 active:scale-[0.99];
   }
 
   .icon-btn {
-    @apply inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50;
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-lg border-2 border-slate-300 bg-white text-slate-900 transition hover:bg-slate-50;
   }
 
   .panel-tab {
-    @apply inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-slate-500 transition hover:text-slate-900;
+    @apply inline-flex min-h-10 min-w-0 items-center gap-2 rounded-md px-3 text-sm font-extrabold text-slate-800 transition hover:text-slate-950;
   }
 
   .panel-tab-active {
     @apply bg-teal-700 text-white hover:text-white;
   }
 
+  .calendar-weekdays,
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+
+  .calendar-weekdays {
+    @apply text-center text-[13px] font-extrabold uppercase text-slate-800;
+  }
+
+  .calendar-empty {
+    min-width: 0;
+    min-height: 5rem;
+  }
+
   .calendar-day {
-    @apply flex min-h-24 flex-col items-start gap-1 overflow-hidden rounded-lg border-2 p-2 text-left shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-700;
+    @apply flex min-h-24 min-w-0 flex-col items-start gap-1 overflow-hidden rounded-lg border-2 p-2 text-left shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-700;
   }
 
   .calendar-date {
@@ -67,7 +85,7 @@ textarea {
   }
 
   .field {
-    @apply flex flex-col gap-1 text-sm font-medium text-slate-700;
+    @apply flex min-w-0 flex-col gap-1 text-sm font-extrabold text-slate-900;
   }
 
   .field input,
@@ -76,8 +94,12 @@ textarea {
     @apply min-h-12 rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 disabled:bg-slate-100;
   }
 
+  .status-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+
   .status-choice {
-    @apply min-h-12 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-sm font-medium text-slate-700 transition active:scale-[0.99];
+    @apply min-h-12 min-w-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-base font-extrabold text-slate-900 transition active:scale-[0.99];
   }
 
   .status-choice-active {
@@ -85,14 +107,28 @@ textarea {
   }
 
   .step-btn {
-    @apply flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-white text-xl font-semibold text-slate-700 transition active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-300;
+    @apply flex h-12 w-12 items-center justify-center rounded-lg border-2 border-slate-300 bg-white text-xl font-extrabold text-slate-900 transition active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400;
   }
 }
 
 @media (max-width: 640px) {
+  .calendar-weekdays,
+  .calendar-grid {
+    gap: 0.2rem;
+  }
+
+  .calendar-weekdays {
+    font-size: 0.6875rem;
+  }
+
+  .calendar-empty {
+    min-height: 4.8rem;
+  }
+
   .calendar-day {
-    min-height: 5rem;
-    padding: 0.4rem;
+    min-height: 4.8rem;
+    padding: 0.32rem;
+    border-radius: 0.5rem;
   }
 
   .calendar-date {
@@ -108,6 +144,18 @@ textarea {
   }
 
   .btn-secondary {
-    font-size: 0.8125rem;
+    min-height: 3.25rem;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+    font-size: 0.78rem;
+  }
+
+  .status-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .status-choice {
+    min-height: 3.25rem;
+    font-size: 1rem;
   }
 }

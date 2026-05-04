@@ -149,18 +149,18 @@ export default function App() {
             </div>
             <div className="min-w-0">
               <h1 className="text-xl font-semibold tracking-normal">Shift Bordro</h1>
-              <p className="truncate text-sm text-slate-500">Vardiya, izin, mesai ve net maas</p>
+              <p className="truncate text-sm font-semibold text-slate-700">Vardiya, izin, mesai ve net maas</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
             <button className="btn-secondary justify-center" onClick={applyReference}>
-              <ShieldCheck className="h-4 w-4" /> Referans bordro
+              <ShieldCheck className="h-4 w-4 shrink-0" /> <span>Referans bordro</span>
             </button>
             <button className="btn-secondary justify-center" onClick={exportJson}>
-              <Download className="h-4 w-4" /> JSON
+              <Download className="h-4 w-4 shrink-0" /> <span>JSON</span>
             </button>
             <button className="btn-secondary justify-center" onClick={resetAll}>
-              <RotateCcw className="h-4 w-4" /> Sifirla
+              <RotateCcw className="h-4 w-4 shrink-0" /> <span>Sifirla</span>
             </button>
           </div>
         </div>
@@ -201,11 +201,11 @@ export default function App() {
 
             {activePanel === 'calendar' ? (
               <div className="p-2 sm:p-3">
-                <div className="grid grid-cols-7 gap-1 pb-2 text-center text-[13px] font-bold uppercase text-slate-700">
+                <div className="calendar-weekdays pb-2">
                   {['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => <span key={day}>{day}</span>)}
                 </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {leadingDays.map((_, index) => <div key={`empty-${index}`} className="min-h-24" />)}
+                <div className="calendar-grid">
+                  {leadingDays.map((_, index) => <div key={`empty-${index}`} className="calendar-empty" />)}
                   {monthDays.map((day) => {
                     const date = format(day, 'yyyy-MM-dd');
                     const entry = entries.find((item) => item.date === date);
@@ -297,7 +297,7 @@ function DayEditor({
       <div className="space-y-4">
         <div>
           <p className="mb-2 text-sm font-medium text-slate-700">Gun tipi</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="status-grid">
             {STATUS_OPTIONS.map((status) => (
               <button
                 key={status}
