@@ -142,7 +142,7 @@ export default function App() {
   return (
     <div className="app-shell min-h-screen bg-slate-50 text-slate-950">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:flex-row sm:items-center sm:justify-between sm:py-4">
+        <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-3 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:flex-row sm:items-center sm:justify-between sm:py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-teal-700 text-white">
               <CalendarDays className="h-6 w-6" aria-hidden="true" />
@@ -152,7 +152,7 @@ export default function App() {
               <p className="truncate text-sm font-semibold text-slate-700">Vardiya, izin, mesai ve net maas</p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+          <div className="grid w-full min-w-0 grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap">
             <button className="btn-secondary justify-center" onClick={applyReference}>
               <ShieldCheck className="h-4 w-4 shrink-0" /> <span>Referans bordro</span>
             </button>
@@ -166,11 +166,11 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 sm:py-5 lg:grid-cols-[1fr_380px]">
-        <section className="space-y-4">
+      <main className="mx-auto grid w-full max-w-7xl min-w-0 gap-4 px-3 py-4 sm:px-4 sm:py-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <section className="min-w-0 space-y-4">
           <SummaryCards payroll={payroll} />
 
-          <div className="rounded-lg border border-slate-200 bg-white shadow-soft">
+          <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-soft">
             <div className="flex flex-col gap-3 border-b border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
               <div className="grid grid-cols-[44px_1fr_44px] items-center gap-2">
                 <button className="icon-btn" onClick={() => changeMonth(-1)} aria-label="Onceki ay">
@@ -242,7 +242,7 @@ export default function App() {
           <PayrollTable payroll={payroll} />
         </section>
 
-        <aside className="hidden space-y-4 lg:block">
+        <aside className="hidden min-w-0 space-y-4 lg:block">
           {selectedEntry ? (
             <DayEditor entry={selectedEntry} settings={settings} onChange={(patch) => updateEntry(selectedEntry.date, patch)} />
           ) : null}
@@ -285,7 +285,7 @@ function DayEditor({
   onChange: (patch: Partial<ShiftDayEntry>) => void;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
+    <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{format(parseISO(entry.date), 'd MMMM yyyy', { locale: tr })}</h2>
@@ -434,13 +434,13 @@ function SettingsPanel({
 
 function PayrollTable({ payroll }: { payroll: ReturnType<typeof calculateMonthPayroll> }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-soft">
+    <section className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-soft">
       <div className="border-b border-slate-200 p-4">
         <h2 className="text-lg font-semibold">Bordro ozeti</h2>
         <p className="text-sm text-slate-500">Kazanc satirlari, matrahlar ve yasal kesintiler</p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[680px] text-left text-sm">
+      <div className="max-w-full overflow-x-auto">
+        <table className="w-full min-w-[560px] text-left text-sm sm:min-w-[680px]">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Kazanc</th>

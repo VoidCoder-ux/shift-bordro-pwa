@@ -7,6 +7,13 @@
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -16,7 +23,6 @@ body {
   min-width: 320px;
   background: #f8fafc;
   -webkit-tap-highlight-color: transparent;
-  overflow-x: hidden;
 }
 
 button,
@@ -27,13 +33,19 @@ textarea {
 }
 
 .app-shell {
+  width: 100%;
+  max-width: 100%;
   padding-bottom: max(env(safe-area-inset-bottom), 0px);
-  overflow-x: hidden;
 }
 
 @layer components {
   .btn-secondary {
-    @apply inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-sm font-extrabold leading-tight text-slate-900 transition hover:bg-slate-50 active:scale-[0.99];
+    @apply inline-flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-sm font-extrabold leading-tight text-slate-900 transition hover:bg-slate-50 active:scale-[0.99];
+  }
+
+  .btn-secondary span {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .icon-btn {
@@ -50,6 +62,9 @@ textarea {
 
   .calendar-weekdays,
   .calendar-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 0.25rem;
@@ -95,11 +110,11 @@ textarea {
   }
 
   .status-grid {
-    @apply grid grid-cols-2 gap-2;
+    @apply grid min-w-0 grid-cols-2 gap-2;
   }
 
   .status-choice {
-    @apply min-h-12 min-w-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-base font-extrabold text-slate-900 transition active:scale-[0.99];
+    @apply min-h-12 min-w-0 max-w-full rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-base font-extrabold text-slate-900 transition active:scale-[0.99];
   }
 
   .status-choice-active {
