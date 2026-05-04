@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shift-bordro-v2';
+const CACHE_NAME = 'shift-bordro-v3';
 const BASE_PATH = '/shift-bordro-pwa/';
 const APP_SHELL = [
   BASE_PATH,
