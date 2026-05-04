@@ -47,15 +47,23 @@ textarea {
   }
 
   .calendar-day {
-    @apply flex min-h-24 flex-col items-start gap-1 overflow-hidden rounded-lg border p-2 text-left transition hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600;
+    @apply flex min-h-24 flex-col items-start gap-1 overflow-hidden rounded-lg border-2 p-2 text-left shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-700;
+  }
+
+  .calendar-date {
+    @apply text-base font-extrabold leading-none text-slate-950;
   }
 
   .calendar-status {
-    @apply w-full truncate text-[11px] leading-tight;
+    @apply w-full truncate text-[12px] font-bold leading-tight;
+  }
+
+  .calendar-chip {
+    @apply rounded bg-white/80 px-1 text-[11px] font-bold leading-tight text-slate-950;
   }
 
   .calendar-day-active {
-    @apply ring-2 ring-teal-700;
+    @apply border-teal-800 ring-4 ring-teal-700/35;
   }
 
   .field {
@@ -83,12 +91,20 @@ textarea {
 
 @media (max-width: 640px) {
   .calendar-day {
-    min-height: 4.75rem;
-    padding: 0.35rem;
+    min-height: 5rem;
+    padding: 0.4rem;
+  }
+
+  .calendar-date {
+    font-size: 0.9375rem;
   }
 
   .calendar-status {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .btn-secondary {

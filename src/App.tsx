@@ -50,12 +50,12 @@ const STATUS_LABELS: Record<DayStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<DayStatus, string> = {
-  blank: 'border-dashed border-slate-200 bg-white text-slate-400',
-  worked: 'border-teal-200 bg-teal-50 text-teal-900',
-  paid_leave: 'border-sky-200 bg-sky-50 text-sky-900',
-  unpaid_leave: 'border-rose-200 bg-rose-50 text-rose-900',
-  rest: 'border-slate-200 bg-slate-50 text-slate-700',
-  public_holiday: 'border-amber-200 bg-amber-50 text-amber-900'
+  blank: 'border-slate-300 bg-white text-slate-700',
+  worked: 'border-teal-600 bg-teal-100 text-teal-950',
+  paid_leave: 'border-sky-600 bg-sky-100 text-sky-950',
+  unpaid_leave: 'border-rose-600 bg-rose-100 text-rose-950',
+  rest: 'border-slate-500 bg-slate-100 text-slate-950',
+  public_holiday: 'border-amber-600 bg-amber-100 text-amber-950'
 };
 
 export default function App() {
@@ -201,7 +201,7 @@ export default function App() {
 
             {activePanel === 'calendar' ? (
               <div className="p-2 sm:p-3">
-                <div className="grid grid-cols-7 gap-1 pb-2 text-center text-xs font-semibold uppercase text-slate-500">
+                <div className="grid grid-cols-7 gap-1 pb-2 text-center text-[13px] font-bold uppercase text-slate-700">
                   {['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => <span key={day}>{day}</span>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
@@ -216,10 +216,10 @@ export default function App() {
                         className={`calendar-day ${isSelected ? 'calendar-day-active' : ''} ${entry ? STATUS_CLASSES[entry.status] : 'border-slate-200 bg-white'}`}
                         onClick={() => setSelectedDate(date)}
                       >
-                        <span className="text-sm font-semibold">{format(day, 'd')}</span>
+                        <span className="calendar-date">{format(day, 'd')}</span>
                         <span className="calendar-status">{entry ? STATUS_LABELS[entry.status] : 'Bos'}</span>
-                        {entry?.overtimeHours ? <span className="text-[11px]">FM {entry.overtimeHours}s</span> : null}
-                        {entry?.workedOnPublicHoliday ? <span className="text-[11px] font-semibold">Tatil calisti</span> : null}
+                        {entry?.overtimeHours ? <span className="calendar-chip">FM {entry.overtimeHours}s</span> : null}
+                        {entry?.workedOnPublicHoliday ? <span className="calendar-chip">Tatil calisti</span> : null}
                       </button>
                     );
                   })}
