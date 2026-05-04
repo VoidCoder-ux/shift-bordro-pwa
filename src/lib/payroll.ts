@@ -32,6 +32,7 @@ export interface PayrollLine {
   days: number;
   hours: number;
   gross: number;
+  net: number;
 }
 
 export interface PayrollDeductions {
@@ -249,8 +250,29 @@ function sumLine(lines: PayrollLine[], key: string, label: string, days: number,
     existing.hours = round2(existing.hours + hours);
     existing.gross = round2(existing.gross + gross);
   } else if (days || hours || gross) {
-    lines.push({ key, label, days: round2(days), hours: round2(hours), gross: round2(gross) });
+    lines.push({ key, label, days: round2(days), hours: round2(hours), gross: round2(gross), net: 0 });
   }
+}
+
+function allocateLineNet(lines: PayrollLine[], totalGross: number, totalNet: number): PayrollLine[] {
+  if (lines.length === 0 || totalGross <= 0 || totalNet <= 0) {
+    return lines.map((line) => ({ ...line, net: 0 }));
+  }
+
+  let allocated = 0;
+  const positiveIndexes = lines
+    .map((line, index) => (line.gross > 0 ? index : -1))
+    .filter((index) => index >= 0);
+  const lastPositiveIndex = positiveIndexes[positiveIndexes.length - 1];
+
+  return lines.map((line, index) => {
+    if (line.gross <= 0) return { ...line, net: 0 };
+    const net = index === lastPositiveIndex
+      ? round2(totalNet - allocated)
+      : round2((line.gross / totalGross) * totalNet);
+    allocated = round2(allocated + net);
+    return { ...line, net };
+  });
 }
 
 export function calculateMonthPayroll(
@@ -348,6 +370,7 @@ export function calculateMonthPayroll(
 
   const totalGross = round2(baseGross + extraGross);
   const computed = computeNetFromGross(totalGross, settings);
+  const linesWithNet = allocateLineNet(lines, totalGross, computed.netPay);
 
   return {
     ...computed,
@@ -362,7 +385,7 @@ export function calculateMonthPayroll(
     publicHolidayWorkDays: round2(publicHolidayWorkDays),
     totalGross,
     netDeltaFromTarget: round2(computed.netPay - settings.targetNetSalary),
-    lines,
+    lines: linesWithNet,
     warnings
   };
 }

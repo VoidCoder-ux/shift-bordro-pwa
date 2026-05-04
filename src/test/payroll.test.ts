@@ -80,6 +80,21 @@ describe('payroll engine', () => {
     expect(result.warnings).toHaveLength(1);
   });
 
+  it('allocates net pay across every positive gross payroll line', () => {
+    const entries = [
+      ...Array.from({ length: 2 }, (_, index) => makeEntry(index + 1)),
+      makeEntry(3, { status: 'paid_leave', workHours: 0 }),
+      makeEntry(4, { overtimeHours: 2 })
+    ];
+    const result = calculateMonthPayroll(entries, REFERENCE_SETTINGS);
+    const lineNetTotal = result.lines.reduce((sum, line) => sum + line.net, 0);
+
+    expect(result.lines.length).toBeGreaterThan(0);
+    expect(result.lines.every((line) => Number.isFinite(line.net))).toBe(true);
+    expect(result.lines.filter((line) => line.gross > 0).every((line) => line.net > 0)).toBe(true);
+    expect(roundToKurus(lineNetTotal)).toBe(result.netPay);
+  });
+
   it('ignores public-holiday-work flags on non-holiday days', () => {
     const result = calculateMonthPayroll(
       [makeEntry(1, { workedOnPublicHoliday: true })],
@@ -141,3 +156,7 @@ describe('payroll engine', () => {
     expect(result.settings.month).toBe(12);
   });
 });
+
+function roundToKurus(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}

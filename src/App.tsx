@@ -465,13 +465,14 @@ function PayrollTable({ payroll }: { payroll: ReturnType<typeof calculateMonthPa
         <p className="text-sm text-slate-500">Kazanc satirlari, matrahlar ve yasal kesintiler</p>
       </div>
       <div className="max-w-full overflow-x-auto">
-        <table className="w-full min-w-[560px] text-left text-sm sm:min-w-[680px]">
+        <table className="w-full min-w-[640px] text-left text-sm sm:min-w-[760px]">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Kazanc</th>
               <th className="px-4 py-3 text-right">Gun</th>
               <th className="px-4 py-3 text-right">Saat</th>
               <th className="px-4 py-3 text-right">Brut</th>
+              <th className="px-4 py-3 text-right">Net</th>
             </tr>
           </thead>
           <tbody>
@@ -481,6 +482,7 @@ function PayrollTable({ payroll }: { payroll: ReturnType<typeof calculateMonthPa
                 <td className="px-4 py-3 text-right">{line.days.toFixed(2)}</td>
                 <td className="px-4 py-3 text-right">{line.hours.toFixed(2)}</td>
                 <td className="px-4 py-3 text-right">{formatTRY(line.gross)}</td>
+                <td className="px-4 py-3 text-right font-semibold text-teal-800">{formatTRY(line.net)}</td>
               </tr>
             ))}
           </tbody>
