@@ -48,6 +48,7 @@ describe('payroll engine', () => {
   });
 
   it('finds the gross value needed for the reference net salary', () => {
+    expect(findGrossFromNet(41400, REFERENCE_SETTINGS)).toBe(51668);
     expect(findGrossFromNet(44160, REFERENCE_SETTINGS)).toBe(55528.63);
   });
 
@@ -56,8 +57,27 @@ describe('payroll engine', () => {
     const result = calculateMonthPayroll(entries, REFERENCE_SETTINGS);
 
     expect(result.paidDays).toBe(30);
-    expect(result.totalGross).toBe(55528.63);
+    expect(result.dailyNet).toBe(1380);
+    expect(result.totalGross).toBe(51668);
     expect(Math.abs(result.netPay - REFERENCE_SETTINGS.targetNetSalary)).toBeLessThanOrEqual(0.1);
+  });
+
+  it('matches the payslip daily net model with public holiday work extras', () => {
+    const entries = [
+      makeEntry(1, { status: 'public_holiday', workHours: 0, workedOnPublicHoliday: true }),
+      ...Array.from({ length: 25 }, (_, index) => makeEntry(index + 2)),
+      ...Array.from({ length: 5 }, (_, index) => makeEntry(index + 27, { status: 'rest', workHours: 0 }))
+    ];
+
+    const result = calculateMonthPayroll(entries, REFERENCE_SETTINGS);
+    const publicHoliday = result.lines.find((line) => line.key === 'public_holiday');
+    const holidayWork = result.lines.find((line) => line.key === 'public_holiday_work');
+
+    expect(result.dailyNet).toBe(1380);
+    expect(result.totalGross).toBe(55528.63);
+    expect(result.netPay).toBe(44160);
+    expect(publicHoliday?.net).toBe(1380);
+    expect(holidayWork?.net).toBe(1380);
   });
 
   it('separates weekly rest, public holiday work, and overtime rows', () => {

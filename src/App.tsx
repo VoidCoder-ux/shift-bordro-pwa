@@ -262,13 +262,14 @@ export default function App() {
 
 function SummaryCards({ payroll }: { payroll: ReturnType<typeof calculateMonthPayroll> }) {
   const cards = [
+    { label: 'Gunluk net', value: formatTRY(payroll.dailyNet), icon: CalendarDays, tone: 'text-teal-700' },
     { label: 'Net odenen', value: formatTRY(payroll.netPay), icon: Banknote, tone: 'text-teal-700' },
     { label: 'Brut kazanc', value: formatTRY(payroll.totalGross), icon: Clock, tone: 'text-slate-700' },
     { label: 'Yasal kesinti', value: formatTRY(payroll.deductions.legalTotal), icon: ShieldCheck, tone: 'text-amber-700' },
-    { label: 'Hedef farki', value: formatTRY(payroll.netDeltaFromTarget), icon: AlertTriangle, tone: payroll.netDeltaFromTarget < 0 ? 'text-rose-700' : 'text-sky-700' }
+    { label: 'Ek net', value: formatTRY(payroll.netDeltaFromTarget), icon: AlertTriangle, tone: payroll.netDeltaFromTarget < 0 ? 'text-rose-700' : 'text-sky-700' }
   ];
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       {cards.map(({ label, value, icon: Icon, tone }) => (
         <div key={label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
           <div className="flex items-center justify-between">
@@ -404,7 +405,7 @@ function SettingsPanel({
   return (
     <div className="grid gap-4 p-4 md:grid-cols-2">
       <label className="field">
-        <span>Net maas</span>
+        <span>30 gunluk baz net maas</span>
         <input inputMode="decimal" value={settings.targetNetSalary} onChange={(event) => setNumber('targetNetSalary', event.target.value)} />
       </label>
       <div className="grid grid-cols-2 gap-3">

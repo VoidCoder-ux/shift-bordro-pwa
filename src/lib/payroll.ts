@@ -50,6 +50,7 @@ export interface PayrollDeductions {
 export interface PayrollResult {
   settings: PayrollSettings;
   targetGrossSalary: number;
+  dailyNet: number;
   dailyGross: number;
   hourlyGross: number;
   paidDays: number;
@@ -69,7 +70,7 @@ export interface PayrollResult {
 export const REFERENCE_SETTINGS: PayrollSettings = {
   year: 2026,
   month: 1,
-  targetNetSalary: 44160,
+  targetNetSalary: 41400,
   dailyStandardHours: 7.5,
   monthlyStandardHours: 225,
   payrollMonthDays: 30,
@@ -163,6 +164,7 @@ export function computeNetFromGross(grossInput: number, settings: PayrollSetting
   return {
     settings,
     targetGrossSalary: gross,
+    dailyNet: round2(settings.targetNetSalary / settings.payrollMonthDays),
     dailyGross: round2(gross / settings.payrollMonthDays),
     hourlyGross: round2(gross / settings.monthlyStandardHours),
     paidDays: settings.payrollMonthDays,
@@ -228,9 +230,9 @@ export function defaultEntriesForMonth(settings: PayrollSettings): ShiftDayEntry
 }
 
 export function buildReferenceEntries(): ShiftDayEntry[] {
-  return Array.from({ length: 30 }, (_, index) => {
+  return Array.from({ length: 31 }, (_, index) => {
     const day = index + 1;
-    const isRest = day > 25;
+    const isRest = day > 26;
     const isHoliday = day === 1;
     return {
       date: toISODate(2026, 1, day),
@@ -254,25 +256,43 @@ function sumLine(lines: PayrollLine[], key: string, label: string, days: number,
   }
 }
 
-function allocateLineNet(lines: PayrollLine[], totalGross: number, totalNet: number): PayrollLine[] {
-  if (lines.length === 0 || totalGross <= 0 || totalNet <= 0) {
-    return lines.map((line) => ({ ...line, net: 0 }));
+function addLineNet(lines: PayrollLine[], key: string, net: number): void {
+  const existing = lines.find((line) => line.key === key);
+  if (existing) {
+    existing.net = round2(existing.net + net);
   }
+}
+
+function distributeGrossByNet(lines: PayrollLine[], keys: string[], totalGross: number): number {
+  const targets = lines.filter((line) => keys.includes(line.key) && line.net > 0);
+  const netTotal = round2(targets.reduce((sum, line) => sum + line.net, 0));
+  if (targets.length === 0 || netTotal <= 0 || totalGross <= 0) return 0;
 
   let allocated = 0;
-  const positiveIndexes = lines
-    .map((line, index) => (line.gross > 0 ? index : -1))
-    .filter((index) => index >= 0);
-  const lastPositiveIndex = positiveIndexes[positiveIndexes.length - 1];
+  const last = targets[targets.length - 1];
+  for (const line of targets) {
+    const gross = line === last ? round2(totalGross - allocated) : round2((line.net / netTotal) * totalGross);
+    line.gross = round2(line.gross + gross);
+    allocated = round2(allocated + gross);
+  }
 
-  return lines.map((line, index) => {
-    if (line.gross <= 0) return { ...line, net: 0 };
-    const net = index === lastPositiveIndex
-      ? round2(totalNet - allocated)
-      : round2((line.gross / totalGross) * totalNet);
-    allocated = round2(allocated + net);
-    return { ...line, net };
-  });
+  return allocated;
+}
+
+function grossIncrementForNet(baseGross: number, targetNetIncrement: number, settings: PayrollSettings): number {
+  const targetNet = round2(computeNetFromGross(baseGross, settings).netPay + clampMoney(targetNetIncrement));
+  const gross = findGrossFromNet(targetNet, settings);
+  return round2(Math.max(0, gross - baseGross));
+}
+
+function alignLineNetTotal(lines: PayrollLine[], netPay: number): PayrollLine[] {
+  const current = round2(lines.reduce((sum, line) => sum + line.net, 0));
+  const delta = round2(netPay - current);
+  if (delta === 0) return lines;
+
+  const target = [...lines].reverse().find((line) => line.net > 0) ?? lines[lines.length - 1];
+  if (target) target.net = round2(target.net + delta);
+  return lines;
 }
 
 export function calculateMonthPayroll(
@@ -281,8 +301,9 @@ export function calculateMonthPayroll(
 ): PayrollResult {
   const settings = sanitizePayrollSettings(rawSettings);
   const targetGrossSalary = findGrossFromNet(settings.targetNetSalary, settings);
+  const dailyNet = round2(settings.targetNetSalary / settings.payrollMonthDays);
   const dailyGross = round2(targetGrossSalary / settings.payrollMonthDays);
-  const hourlyGross = round2(targetGrossSalary / settings.monthlyStandardHours);
+  const hourlyGross = round2(dailyGross / settings.dailyStandardHours);
   const lines: PayrollLine[] = [];
   const warnings: string[] = [];
 
@@ -291,8 +312,6 @@ export function calculateMonthPayroll(
   let regularHours = 0;
   let overtimeHours = 0;
   let publicHolidayWorkDays = 0;
-  let baseGross = 0;
-  let extraGross = 0;
   let paidBaseSlots = 0;
 
   for (const entry of entries) {
@@ -307,14 +326,13 @@ export function calculateMonthPayroll(
     const isPublicHoliday = entry.status === 'public_holiday';
     const safeWorkHours = clampNumber(entry.workHours, 0, 24, 0);
     const safeOvertimeHours = clampNumber(entry.overtimeHours, 0, 24, 0);
-    let baseGrossForDay = 0;
+    let baseSlotAdded = false;
 
     if (isPaid) {
       paidDays += 1;
-      if (paidBaseSlots < settings.payrollMonthDays) {
+      if (!isPublicHoliday && paidBaseSlots < settings.payrollMonthDays) {
         paidBaseSlots += 1;
-        baseGrossForDay = dailyGross;
-        baseGross += baseGrossForDay;
+        baseSlotAdded = true;
       }
     } else {
       unpaidDays += 1;
@@ -322,22 +340,25 @@ export function calculateMonthPayroll(
 
     if (entry.status === 'worked') {
       regularHours += safeWorkHours;
-      sumLine(lines, 'normal', 'Normal Calisma', 1, safeWorkHours, baseGrossForDay);
+      sumLine(lines, 'normal', 'Normal Calisma', 1, safeWorkHours, 0);
+      if (baseSlotAdded) addLineNet(lines, 'normal', dailyNet);
     } else if (entry.status === 'rest') {
-      sumLine(lines, 'weekly_rest', 'Hafta Tatili', 1, settings.dailyStandardHours, baseGrossForDay);
+      sumLine(lines, 'weekly_rest', 'Hafta Tatili', 1, settings.dailyStandardHours, 0);
+      if (baseSlotAdded) addLineNet(lines, 'weekly_rest', dailyNet);
     } else if (entry.status === 'paid_leave') {
-      sumLine(lines, 'paid_leave', 'Ucretli Izin', 1, settings.dailyStandardHours, baseGrossForDay);
+      sumLine(lines, 'paid_leave', 'Ucretli Izin', 1, settings.dailyStandardHours, 0);
+      if (baseSlotAdded) addLineNet(lines, 'paid_leave', dailyNet);
     } else if (entry.status === 'public_holiday') {
-      sumLine(lines, 'public_holiday', 'Genel Tatil', 1, settings.dailyStandardHours, baseGrossForDay);
+      sumLine(lines, 'public_holiday', 'Genel Tatil', 1, settings.dailyStandardHours, 0);
+      addLineNet(lines, 'public_holiday', dailyNet);
     } else {
       sumLine(lines, 'unpaid_leave', 'Ucretsiz Izin / Rapor', 1, 0, 0);
     }
 
     if (isPublicHoliday && entry.workedOnPublicHoliday) {
       publicHolidayWorkDays += 1;
-      const holidayGross = round2(dailyGross * settings.holidayWorkMultiplier);
-      extraGross += holidayGross;
-      sumLine(lines, 'public_holiday_work', 'Genel Tatil Calisti', 1, settings.dailyStandardHours, holidayGross);
+      sumLine(lines, 'public_holiday_work', 'Genel Tatil Calisti', 1, settings.dailyStandardHours, 0);
+      addLineNet(lines, 'public_holiday_work', round2(dailyNet * settings.holidayWorkMultiplier));
     }
 
     if (!isPublicHoliday && entry.workedOnPublicHoliday) {
@@ -346,9 +367,8 @@ export function calculateMonthPayroll(
 
     if (safeOvertimeHours > 0) {
       overtimeHours += safeOvertimeHours;
-      const overtimeGross = round2(safeOvertimeHours * hourlyGross * settings.overtimeMultiplier);
-      extraGross += overtimeGross;
-      sumLine(lines, 'overtime', 'Fazla Mesai', 0, safeOvertimeHours, overtimeGross);
+      sumLine(lines, 'overtime', 'Fazla Mesai', 0, safeOvertimeHours, 0);
+      addLineNet(lines, 'overtime', round2((safeOvertimeHours * dailyNet * settings.overtimeMultiplier) / settings.dailyStandardHours));
     }
   }
 
@@ -358,24 +378,28 @@ export function calculateMonthPayroll(
     warnings.push(`Ucretli gun ${settings.payrollMonthDays} gunle sinirlandi; ${overflow} fazla takvim gunu bordroya eklenmedi.`);
   }
 
-  const expectedBaseGross = round2(targetGrossSalary * (paidBaseSlots / settings.payrollMonthDays));
-  const baseAdjustment = round2(expectedBaseGross - baseGross);
-  if (baseAdjustment !== 0 && lines.length > 0) {
-    const targetLine = lines.find((line) => line.gross > 0);
-    if (targetLine) {
-      targetLine.gross = round2(targetLine.gross + baseAdjustment);
-      baseGross = expectedBaseGross;
-    }
+  const baseKeys = ['normal', 'weekly_rest', 'paid_leave'];
+  const extraKeys = ['public_holiday', 'public_holiday_work', 'overtime'];
+  const baseNet = round2(dailyNet * paidBaseSlots);
+  let runningGross = findGrossFromNet(baseNet, settings);
+  distributeGrossByNet(lines, baseKeys, runningGross);
+
+  for (const line of lines) {
+    if (!extraKeys.includes(line.key) || line.net <= 0) continue;
+    const gross = grossIncrementForNet(runningGross, line.net, settings);
+    line.gross = round2(line.gross + gross);
+    runningGross = round2(runningGross + gross);
   }
 
-  const totalGross = round2(baseGross + extraGross);
+  const totalGross = round2(runningGross);
   const computed = computeNetFromGross(totalGross, settings);
-  const linesWithNet = allocateLineNet(lines, totalGross, computed.netPay);
+  const linesWithNet = alignLineNetTotal(lines, computed.netPay);
 
   return {
     ...computed,
     settings,
     targetGrossSalary,
+    dailyNet,
     dailyGross,
     hourlyGross,
     paidDays: round2(paidDayLimit),

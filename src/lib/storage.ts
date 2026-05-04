@@ -3,7 +3,8 @@ import { DEFAULT_SETTINGS, defaultEntriesForMonth, sanitizePayrollSettings, type
 const SETTINGS_KEY = 'shift-bordro:settings';
 const ENTRIES_KEY = 'shift-bordro:entries';
 const VERSION_KEY = 'shift-bordro:version';
-const STORAGE_VERSION = '2';
+const STORAGE_VERSION = '3';
+const LEGACY_REFERENCE_NET = 44160;
 
 export interface StoredState {
   settings: PayrollSettings;
@@ -18,19 +19,16 @@ export function loadState(): StoredState {
     };
   }
 
-  if (window.localStorage.getItem(VERSION_KEY) !== STORAGE_VERSION) {
-    const state = {
-      settings: DEFAULT_SETTINGS,
-      entries: defaultEntriesForMonth(DEFAULT_SETTINGS)
-    };
-    saveSettings(state.settings);
-    saveEntries(state.entries);
-    window.localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
-    return state;
+  const storedSettings = readJson<PayrollSettings>(SETTINGS_KEY);
+  const storedEntries = readJson<ShiftDayEntry[]>(ENTRIES_KEY);
+  const storedVersion = window.localStorage.getItem(VERSION_KEY);
+  const migratedSettings = migrateSettings(storedSettings, storedVersion);
+  const settings = sanitizePayrollSettings({ ...DEFAULT_SETTINGS, ...migratedSettings });
+  const entries = storedEntries ?? defaultEntriesForMonth(settings);
+  if (storedVersion !== STORAGE_VERSION) {
+    saveSettings(settings);
+    saveEntries(storedEntries ?? entries);
   }
-
-  const settings = sanitizePayrollSettings({ ...DEFAULT_SETTINGS, ...(readJson<PayrollSettings>(SETTINGS_KEY) ?? {}) });
-  const entries = readJson<ShiftDayEntry[]>(ENTRIES_KEY) ?? defaultEntriesForMonth(settings);
   return { settings, entries };
 }
 
@@ -59,4 +57,15 @@ function readJson<T>(key: string): T | null {
   } catch {
     return null;
   }
+}
+
+function migrateSettings(settings: PayrollSettings | null, version: string | null): Partial<PayrollSettings> {
+  if (!settings) return {};
+  if (version === STORAGE_VERSION) return settings;
+
+  const next: Partial<PayrollSettings> = { ...settings };
+  if (settings.targetNetSalary === LEGACY_REFERENCE_NET) {
+    next.targetNetSalary = DEFAULT_SETTINGS.targetNetSalary;
+  }
+  return next;
 }
