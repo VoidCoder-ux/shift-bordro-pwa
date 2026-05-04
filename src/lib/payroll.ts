@@ -1,4 +1,4 @@
-export type DayStatus = 'worked' | 'paid_leave' | 'unpaid_leave' | 'rest' | 'public_holiday';
+export type DayStatus = 'blank' | 'worked' | 'paid_leave' | 'unpaid_leave' | 'rest' | 'public_holiday';
 
 export interface PayrollSettings {
   year: number;
@@ -186,16 +186,13 @@ export function defaultEntriesForMonth(settings: PayrollSettings): ShiftDayEntry
   return Array.from({ length: totalDays }, (_, index) => {
     const day = index + 1;
     const date = toISODate(settings.year, settings.month, day);
-    const weekday = new Date(settings.year, settings.month - 1, day).getDay();
-    const isReferenceHoliday = settings.year === 2026 && settings.month === 1 && day === 1;
-    const isRest = weekday === 0;
     return {
       date,
-      status: isReferenceHoliday ? 'public_holiday' : isRest ? 'rest' : 'worked',
-      workHours: isReferenceHoliday ? 0 : isRest ? 0 : settings.dailyStandardHours,
+      status: 'blank',
+      workHours: 0,
       overtimeHours: 0,
-      workedOnPublicHoliday: isReferenceHoliday,
-      note: isReferenceHoliday ? 'Yilbasi resmi tatil calismasi' : ''
+      workedOnPublicHoliday: false,
+      note: ''
     };
   });
 }
@@ -254,6 +251,13 @@ export function calculateMonthPayroll(
   let paidBaseSlots = 0;
 
   for (const entry of entries) {
+    if (entry.status === 'blank') {
+      if (entry.workedOnPublicHoliday || entry.overtimeHours > 0 || entry.workHours > 0) {
+        warnings.push(`${entry.date}: gun tipi secilmedigi icin saat/mesai kaydi bordroya dahil edilmedi.`);
+      }
+      continue;
+    }
+
     const isPaid = entry.status !== 'unpaid_leave';
     const isPublicHoliday = entry.status === 'public_holiday';
     const safeWorkHours = Math.max(0, entry.workHours || 0);

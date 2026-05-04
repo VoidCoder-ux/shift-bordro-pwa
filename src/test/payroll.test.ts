@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   calculateMonthPayroll,
   computeNetFromGross,
+  defaultEntriesForMonth,
   findGrossFromNet,
   REFERENCE_SETTINGS,
   toISODate,
@@ -21,6 +22,18 @@ function makeEntry(day: number, patch: Partial<ShiftDayEntry> = {}): ShiftDayEnt
 }
 
 describe('payroll engine', () => {
+  it('starts a new month with blank employee-entered days', () => {
+    const entries = defaultEntriesForMonth(REFERENCE_SETTINGS);
+    const result = calculateMonthPayroll(entries, REFERENCE_SETTINGS);
+
+    expect(entries).toHaveLength(31);
+    expect(entries.every((entry) => entry.status === 'blank')).toBe(true);
+    expect(entries.every((entry) => entry.workHours === 0 && entry.overtimeHours === 0)).toBe(true);
+    expect(result.paidDays).toBe(0);
+    expect(result.totalGross).toBe(0);
+    expect(result.netPay).toBe(0);
+  });
+
   it('matches the supplied January 2026 payslip deductions from gross', () => {
     const result = computeNetFromGross(55528.63, REFERENCE_SETTINGS);
 
@@ -74,5 +87,16 @@ describe('payroll engine', () => {
 
     expect(result.lines.some((line) => line.key === 'public_holiday_work')).toBe(false);
     expect(result.warnings[0]).toContain('resmi tatil disi');
+  });
+
+  it('does not count hours on a blank day until the employee chooses a day type', () => {
+    const result = calculateMonthPayroll(
+      [makeEntry(1, { status: 'blank', workHours: 7.5, overtimeHours: 2 })],
+      REFERENCE_SETTINGS
+    );
+
+    expect(result.totalGross).toBe(0);
+    expect(result.lines).toHaveLength(0);
+    expect(result.warnings[0]).toContain('gun tipi secilmedigi');
   });
 });

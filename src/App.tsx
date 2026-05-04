@@ -39,6 +39,7 @@ import {
 import { loadState, resetStorage, saveEntries, saveSettings } from './lib/storage';
 
 const STATUS_LABELS: Record<DayStatus, string> = {
+  blank: 'Kayit yok',
   worked: 'Calisti',
   paid_leave: 'Ucretli izin',
   unpaid_leave: 'Ucretsiz / rapor',
@@ -47,6 +48,7 @@ const STATUS_LABELS: Record<DayStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<DayStatus, string> = {
+  blank: 'border-dashed border-slate-200 bg-white text-slate-400',
   worked: 'border-teal-200 bg-teal-50 text-teal-900',
   paid_leave: 'border-sky-200 bg-sky-50 text-sky-900',
   unpaid_leave: 'border-rose-200 bg-rose-50 text-rose-900',
@@ -84,6 +86,11 @@ export default function App() {
       if (entry.date !== date) return entry;
       const updated = { ...entry, ...patch };
       if (patch.status && patch.status !== 'public_holiday') {
+        updated.workedOnPublicHoliday = false;
+      }
+      if (patch.status === 'blank') {
+        updated.workHours = 0;
+        updated.overtimeHours = 0;
         updated.workedOnPublicHoliday = false;
       }
       if (patch.status === 'worked' && entry.workHours === 0) {
