@@ -84,6 +84,31 @@ export const REFERENCE_SETTINGS: PayrollSettings = {
 
 export const DEFAULT_SETTINGS: PayrollSettings = { ...REFERENCE_SETTINGS };
 
+export function clampNumber(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+export function sanitizePayrollSettings(settings: PayrollSettings): PayrollSettings {
+  return {
+    ...settings,
+    year: Math.round(clampNumber(settings.year, 2020, 2100, DEFAULT_SETTINGS.year)),
+    month: Math.round(clampNumber(settings.month, 1, 12, DEFAULT_SETTINGS.month)),
+    targetNetSalary: clampNumber(settings.targetNetSalary, 0, 10_000_000, DEFAULT_SETTINGS.targetNetSalary),
+    dailyStandardHours: clampNumber(settings.dailyStandardHours, 0.25, 24, DEFAULT_SETTINGS.dailyStandardHours),
+    monthlyStandardHours: clampNumber(settings.monthlyStandardHours, 1, 744, DEFAULT_SETTINGS.monthlyStandardHours),
+    payrollMonthDays: Math.round(clampNumber(settings.payrollMonthDays, 1, 31, DEFAULT_SETTINGS.payrollMonthDays)),
+    sgkRate: clampNumber(settings.sgkRate, 0, 1, DEFAULT_SETTINGS.sgkRate),
+    unemploymentRate: clampNumber(settings.unemploymentRate, 0, 1, DEFAULT_SETTINGS.unemploymentRate),
+    incomeTaxRate: clampNumber(settings.incomeTaxRate, 0, 1, DEFAULT_SETTINGS.incomeTaxRate),
+    stampTaxRate: clampNumber(settings.stampTaxRate, 0, 1, DEFAULT_SETTINGS.stampTaxRate),
+    minimumWageIncomeTaxExemption: clampNumber(settings.minimumWageIncomeTaxExemption, 0, 1_000_000, DEFAULT_SETTINGS.minimumWageIncomeTaxExemption),
+    minimumWageStampTaxExemption: clampNumber(settings.minimumWageStampTaxExemption, 0, 100_000, DEFAULT_SETTINGS.minimumWageStampTaxExemption),
+    overtimeMultiplier: clampNumber(settings.overtimeMultiplier, 0, 5, DEFAULT_SETTINGS.overtimeMultiplier),
+    holidayWorkMultiplier: clampNumber(settings.holidayWorkMultiplier, 0, 5, DEFAULT_SETTINGS.holidayWorkMultiplier)
+  };
+}
+
 export function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
@@ -116,10 +141,13 @@ export function toISODate(year: number, month: number, day: number): string {
 }
 
 export function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
+  const safeYear = Math.round(clampNumber(year, 2020, 2100, DEFAULT_SETTINGS.year));
+  const safeMonth = Math.round(clampNumber(month, 1, 12, DEFAULT_SETTINGS.month));
+  return new Date(safeYear, safeMonth, 0).getDate();
 }
 
 export function computeNetFromGross(grossInput: number, settings: PayrollSettings): PayrollResult {
+  settings = sanitizePayrollSettings(settings);
   const gross = round2(clampMoney(grossInput));
   const sgkPremium = round2(gross * settings.sgkRate);
   const unemploymentPremium = round2(gross * settings.unemploymentRate);
@@ -182,6 +210,7 @@ export function findGrossFromNet(targetNet: number, settings: PayrollSettings): 
 }
 
 export function defaultEntriesForMonth(settings: PayrollSettings): ShiftDayEntry[] {
+  settings = sanitizePayrollSettings(settings);
   const totalDays = daysInMonth(settings.year, settings.month);
   return Array.from({ length: totalDays }, (_, index) => {
     const day = index + 1;
@@ -228,13 +257,7 @@ export function calculateMonthPayroll(
   entries: ShiftDayEntry[],
   rawSettings: PayrollSettings
 ): PayrollResult {
-  const settings = {
-    ...rawSettings,
-    targetNetSalary: clampMoney(rawSettings.targetNetSalary),
-    dailyStandardHours: Math.max(0.01, rawSettings.dailyStandardHours),
-    monthlyStandardHours: Math.max(0.01, rawSettings.monthlyStandardHours),
-    payrollMonthDays: Math.max(1, rawSettings.payrollMonthDays)
-  };
+  const settings = sanitizePayrollSettings(rawSettings);
   const targetGrossSalary = findGrossFromNet(settings.targetNetSalary, settings);
   const dailyGross = round2(targetGrossSalary / settings.payrollMonthDays);
   const hourlyGross = round2(targetGrossSalary / settings.monthlyStandardHours);
@@ -260,8 +283,8 @@ export function calculateMonthPayroll(
 
     const isPaid = entry.status !== 'unpaid_leave';
     const isPublicHoliday = entry.status === 'public_holiday';
-    const safeWorkHours = Math.max(0, entry.workHours || 0);
-    const safeOvertimeHours = Math.max(0, entry.overtimeHours || 0);
+    const safeWorkHours = clampNumber(entry.workHours, 0, 24, 0);
+    const safeOvertimeHours = clampNumber(entry.overtimeHours, 0, 24, 0);
     let baseGrossForDay = 0;
 
     if (isPaid) {

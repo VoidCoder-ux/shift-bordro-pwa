@@ -5,6 +5,7 @@ import {
   defaultEntriesForMonth,
   findGrossFromNet,
   REFERENCE_SETTINGS,
+  sanitizePayrollSettings,
   toISODate,
   type ShiftDayEntry
 } from '../lib/payroll';
@@ -98,5 +99,45 @@ describe('payroll engine', () => {
     expect(result.totalGross).toBe(0);
     expect(result.lines).toHaveLength(0);
     expect(result.warnings[0]).toContain('gun tipi secilmedigi');
+  });
+
+  it('sanitizes invalid calendar settings before generating month entries', () => {
+    const settings = sanitizePayrollSettings({
+      ...REFERENCE_SETTINGS,
+      year: Number.NaN,
+      month: 0,
+      dailyStandardHours: Number.POSITIVE_INFINITY,
+      monthlyStandardHours: -10,
+      overtimeMultiplier: 999
+    });
+    const entries = defaultEntriesForMonth(settings);
+
+    expect(settings.year).toBe(REFERENCE_SETTINGS.year);
+    expect(settings.month).toBe(1);
+    expect(settings.dailyStandardHours).toBe(REFERENCE_SETTINGS.dailyStandardHours);
+    expect(settings.monthlyStandardHours).toBe(1);
+    expect(settings.overtimeMultiplier).toBe(5);
+    expect(entries[0].date).toBe('2026-01-01');
+    expect(entries).toHaveLength(31);
+  });
+
+  it('keeps payroll calculation finite when settings contain invalid numeric values', () => {
+    const result = calculateMonthPayroll(
+      [makeEntry(1, { workHours: Number.NaN, overtimeHours: Number.POSITIVE_INFINITY })],
+      {
+        ...REFERENCE_SETTINGS,
+        year: 0,
+        month: 99,
+        targetNetSalary: Number.NaN,
+        dailyStandardHours: Number.NaN,
+        monthlyStandardHours: Number.NaN,
+        payrollMonthDays: Number.NaN
+      }
+    );
+
+    expect(Number.isFinite(result.totalGross)).toBe(true);
+    expect(Number.isFinite(result.netPay)).toBe(true);
+    expect(result.settings.year).toBe(2020);
+    expect(result.settings.month).toBe(12);
   });
 });

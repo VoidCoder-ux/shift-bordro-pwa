@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, defaultEntriesForMonth, type PayrollSettings, type ShiftDayEntry } from './payroll';
+import { DEFAULT_SETTINGS, defaultEntriesForMonth, sanitizePayrollSettings, type PayrollSettings, type ShiftDayEntry } from './payroll';
 
 const SETTINGS_KEY = 'shift-bordro:settings';
 const ENTRIES_KEY = 'shift-bordro:entries';
@@ -29,13 +29,13 @@ export function loadState(): StoredState {
     return state;
   }
 
-  const settings = readJson<PayrollSettings>(SETTINGS_KEY) ?? DEFAULT_SETTINGS;
+  const settings = sanitizePayrollSettings({ ...DEFAULT_SETTINGS, ...(readJson<PayrollSettings>(SETTINGS_KEY) ?? {}) });
   const entries = readJson<ShiftDayEntry[]>(ENTRIES_KEY) ?? defaultEntriesForMonth(settings);
-  return { settings: { ...DEFAULT_SETTINGS, ...settings }, entries };
+  return { settings, entries };
 }
 
 export function saveSettings(settings: PayrollSettings): void {
-  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(sanitizePayrollSettings(settings)));
   window.localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
 }
 

@@ -31,6 +31,8 @@ import {
   parseTurkishNumber,
   REFERENCE_SETTINGS,
   buildReferenceEntries,
+  clampNumber,
+  sanitizePayrollSettings,
   toISODate,
   type DayStatus,
   type PayrollSettings,
@@ -72,7 +74,7 @@ export default function App() {
   const leadingDays = Array.from({ length: (getDay(monthDays[0]) + 6) % 7 });
 
   const updateSettings = (patch: Partial<PayrollSettings>, resetMonth = false) => {
-    const next = { ...settings, ...patch };
+    const next = sanitizePayrollSettings({ ...settings, ...patch });
     setSettings(next);
     saveSettings(next);
     if (resetMonth) {
@@ -86,7 +88,12 @@ export default function App() {
   const updateEntry = (date: string, patch: Partial<ShiftDayEntry>) => {
     const next = entries.map((entry) => {
       if (entry.date !== date) return entry;
-      const updated = { ...entry, ...patch };
+      const updated = {
+        ...entry,
+        ...patch,
+        workHours: patch.workHours === undefined ? entry.workHours : clampNumber(patch.workHours, 0, 24, entry.workHours),
+        overtimeHours: patch.overtimeHours === undefined ? entry.overtimeHours : clampNumber(patch.overtimeHours, 0, 24, entry.overtimeHours)
+      };
       if (patch.status && patch.status !== 'public_holiday') {
         updated.workedOnPublicHoliday = false;
       }
@@ -355,7 +362,10 @@ function HourStepper({
   disabled?: boolean;
   onChange: (value: number) => void;
 }) {
-  const setValue = (next: number) => onChange(Math.max(0, Math.round(next * 4) / 4));
+  const setValue = (next: number) => {
+    if (!Number.isFinite(next)) return;
+    onChange(Math.round(clampNumber(next, 0, 24, value) * 4) / 4);
+  };
   return (
     <div className={`field ${disabled ? 'opacity-50' : ''}`}>
       <span>{label}</span>
@@ -384,8 +394,11 @@ function SettingsPanel({
   updateSettings: (patch: Partial<PayrollSettings>, resetMonth?: boolean) => void;
 }) {
   const setNumber = (key: keyof PayrollSettings, value: string, resetMonth = false) => {
+    if (value.trim() === '') return;
     const parsed = key === 'targetNetSalary' ? parseTurkishNumber(value) : Number(value);
-    updateSettings({ [key]: parsed } as Partial<PayrollSettings>, resetMonth);
+    if (!Number.isFinite(parsed)) return;
+    const nextValue = normalizeSettingValue(key, parsed);
+    updateSettings({ [key]: nextValue } as Partial<PayrollSettings>, resetMonth);
   };
 
   return (
@@ -430,6 +443,18 @@ function SettingsPanel({
       </label>
     </div>
   );
+}
+
+function normalizeSettingValue(key: keyof PayrollSettings, value: number): number {
+  if (key === 'year') return Math.round(clampNumber(value, 2020, 2100, REFERENCE_SETTINGS.year));
+  if (key === 'month') return Math.round(clampNumber(value, 1, 12, REFERENCE_SETTINGS.month));
+  if (key === 'targetNetSalary') return clampNumber(value, 0, 10_000_000, REFERENCE_SETTINGS.targetNetSalary);
+  if (key === 'dailyStandardHours') return clampNumber(value, 0.25, 24, REFERENCE_SETTINGS.dailyStandardHours);
+  if (key === 'monthlyStandardHours') return clampNumber(value, 1, 744, REFERENCE_SETTINGS.monthlyStandardHours);
+  if (key === 'payrollMonthDays') return Math.round(clampNumber(value, 1, 31, REFERENCE_SETTINGS.payrollMonthDays));
+  if (key === 'minimumWageIncomeTaxExemption') return clampNumber(value, 0, 1_000_000, REFERENCE_SETTINGS.minimumWageIncomeTaxExemption);
+  if (key === 'minimumWageStampTaxExemption') return clampNumber(value, 0, 100_000, REFERENCE_SETTINGS.minimumWageStampTaxExemption);
+  return clampNumber(value, 0, 5, REFERENCE_SETTINGS[key]);
 }
 
 function PayrollTable({ payroll }: { payroll: ReturnType<typeof calculateMonthPayroll> }) {
