@@ -38,6 +38,8 @@ import {
 } from './lib/payroll';
 import { loadState, resetStorage, saveEntries, saveSettings } from './lib/storage';
 
+const STATUS_OPTIONS: DayStatus[] = ['blank', 'worked', 'paid_leave', 'unpaid_leave', 'rest', 'public_holiday'];
+
 const STATUS_LABELS: Record<DayStatus, string> = {
   blank: 'Kayit yok',
   worked: 'Calisti',
@@ -138,58 +140,58 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="app-shell min-h-screen bg-slate-50 text-slate-950">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:flex-row sm:items-center sm:justify-between sm:py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-700 text-white">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-teal-700 text-white">
               <CalendarDays className="h-6 w-6" aria-hidden="true" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-xl font-semibold tracking-normal">Shift Bordro</h1>
-              <p className="text-sm text-slate-500">Aylik vardiya, izin, mesai ve net maas hesabi</p>
+              <p className="truncate text-sm text-slate-500">Vardiya, izin, mesai ve net maas</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn-secondary" onClick={applyReference}>
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+            <button className="btn-secondary justify-center" onClick={applyReference}>
               <ShieldCheck className="h-4 w-4" /> Referans bordro
             </button>
-            <button className="btn-secondary" onClick={exportJson}>
+            <button className="btn-secondary justify-center" onClick={exportJson}>
               <Download className="h-4 w-4" /> JSON
             </button>
-            <button className="btn-secondary" onClick={resetAll}>
+            <button className="btn-secondary justify-center" onClick={resetAll}>
               <RotateCcw className="h-4 w-4" /> Sifirla
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-4 px-4 py-5 lg:grid-cols-[1fr_380px]">
+      <main className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 sm:py-5 lg:grid-cols-[1fr_380px]">
         <section className="space-y-4">
           <SummaryCards payroll={payroll} />
 
           <div className="rounded-lg border border-slate-200 bg-white shadow-soft">
-            <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-3 border-b border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+              <div className="grid grid-cols-[44px_1fr_44px] items-center gap-2">
                 <button className="icon-btn" onClick={() => changeMonth(-1)} aria-label="Onceki ay">
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <h2 className="min-w-44 text-center text-lg font-semibold">
+                <h2 className="text-center text-base font-semibold capitalize sm:text-lg">
                   {format(monthDate, 'MMMM yyyy', { locale: tr })}
                 </h2>
                 <button className="icon-btn" onClick={() => changeMonth(1)} aria-label="Sonraki ay">
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
-              <div className="flex rounded-lg border border-slate-200 p-1">
+              <div className="grid grid-cols-2 rounded-lg border border-slate-200 p-1">
                 <button
-                  className={`panel-tab ${activePanel === 'calendar' ? 'panel-tab-active' : ''}`}
+                  className={`panel-tab justify-center ${activePanel === 'calendar' ? 'panel-tab-active' : ''}`}
                   onClick={() => setActivePanel('calendar')}
                 >
                   <CalendarDays className="h-4 w-4" /> Takvim
                 </button>
                 <button
-                  className={`panel-tab ${activePanel === 'settings' ? 'panel-tab-active' : ''}`}
+                  className={`panel-tab justify-center ${activePanel === 'settings' ? 'panel-tab-active' : ''}`}
                   onClick={() => setActivePanel('settings')}
                 >
                   <Settings className="h-4 w-4" /> Ayarlar
@@ -198,7 +200,7 @@ export default function App() {
             </div>
 
             {activePanel === 'calendar' ? (
-              <div className="p-3">
+              <div className="p-2 sm:p-3">
                 <div className="grid grid-cols-7 gap-1 pb-2 text-center text-xs font-semibold uppercase text-slate-500">
                   {['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => <span key={day}>{day}</span>)}
                 </div>
@@ -215,7 +217,7 @@ export default function App() {
                         onClick={() => setSelectedDate(date)}
                       >
                         <span className="text-sm font-semibold">{format(day, 'd')}</span>
-                        <span className="truncate text-[11px]">{entry ? STATUS_LABELS[entry.status] : 'Bos'}</span>
+                        <span className="calendar-status">{entry ? STATUS_LABELS[entry.status] : 'Bos'}</span>
                         {entry?.overtimeHours ? <span className="text-[11px]">FM {entry.overtimeHours}s</span> : null}
                         {entry?.workedOnPublicHoliday ? <span className="text-[11px] font-semibold">Tatil calisti</span> : null}
                       </button>
@@ -228,10 +230,19 @@ export default function App() {
             )}
           </div>
 
+          <div className="lg:hidden">
+            {selectedEntry ? (
+              <DayEditor entry={selectedEntry} settings={settings} onChange={(patch) => updateEntry(selectedEntry.date, patch)} />
+            ) : null}
+          </div>
+          <div className="lg:hidden">
+            <Warnings warnings={payroll.warnings} />
+          </div>
+
           <PayrollTable payroll={payroll} />
         </section>
 
-        <aside className="space-y-4">
+        <aside className="hidden space-y-4 lg:block">
           {selectedEntry ? (
             <DayEditor entry={selectedEntry} settings={settings} onChange={(patch) => updateEntry(selectedEntry.date, patch)} />
           ) : null}
@@ -284,34 +295,33 @@ function DayEditor({
       </div>
 
       <div className="space-y-4">
-        <label className="field">
-          <span>Gun tipi</span>
-          <select value={entry.status} onChange={(event) => onChange({ status: event.target.value as DayStatus })}>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="field">
-            <span>Calisma saati</span>
-            <input
-              type="number"
-              min="0"
-              step="0.25"
-              value={entry.workHours}
-              onChange={(event) => onChange({ workHours: Number(event.target.value) })}
-            />
-          </label>
-          <label className="field">
-            <span>Fazla mesai</span>
-            <input
-              type="number"
-              min="0"
-              step="0.25"
-              value={entry.overtimeHours}
-              onChange={(event) => onChange({ overtimeHours: Number(event.target.value) })}
-            />
-          </label>
+        <div>
+          <p className="mb-2 text-sm font-medium text-slate-700">Gun tipi</p>
+          <div className="grid grid-cols-2 gap-2">
+            {STATUS_OPTIONS.map((status) => (
+              <button
+                key={status}
+                type="button"
+                className={`status-choice ${entry.status === status ? 'status-choice-active' : ''}`}
+                onClick={() => onChange({ status })}
+              >
+                {STATUS_LABELS[status]}
+              </button>
+            ))}
+          </div>
         </div>
+        <HourStepper
+          label="Calisma saati"
+          value={entry.workHours}
+          disabled={entry.status === 'blank' || entry.status === 'rest' || entry.status === 'unpaid_leave'}
+          onChange={(value) => onChange({ workHours: value })}
+        />
+        <HourStepper
+          label="Fazla mesai"
+          value={entry.overtimeHours}
+          disabled={entry.status === 'blank'}
+          onChange={(value) => onChange({ overtimeHours: value })}
+        />
         <label className="flex items-center justify-between rounded-lg border border-slate-200 p-3 text-sm">
           <span>Resmi tatilde calisti</span>
           <input
@@ -334,6 +344,38 @@ function DayEditor({
   );
 }
 
+function HourStepper({
+  label,
+  value,
+  disabled,
+  onChange
+}: {
+  label: string;
+  value: number;
+  disabled?: boolean;
+  onChange: (value: number) => void;
+}) {
+  const setValue = (next: number) => onChange(Math.max(0, Math.round(next * 4) / 4));
+  return (
+    <div className={`field ${disabled ? 'opacity-50' : ''}`}>
+      <span>{label}</span>
+      <div className="grid grid-cols-[48px_1fr_48px] gap-2">
+        <button type="button" className="step-btn" disabled={disabled} onClick={() => setValue(value - 0.25)}>-</button>
+        <input
+          type="number"
+          min="0"
+          step="0.25"
+          inputMode="decimal"
+          value={value}
+          disabled={disabled}
+          onChange={(event) => setValue(Number(event.target.value))}
+        />
+        <button type="button" className="step-btn" disabled={disabled} onClick={() => setValue(value + 0.25)}>+</button>
+      </div>
+    </div>
+  );
+}
+
 function SettingsPanel({
   settings,
   updateSettings
@@ -350,7 +392,7 @@ function SettingsPanel({
     <div className="grid gap-4 p-4 md:grid-cols-2">
       <label className="field">
         <span>Net maas</span>
-        <input value={settings.targetNetSalary} onChange={(event) => setNumber('targetNetSalary', event.target.value)} />
+        <input inputMode="decimal" value={settings.targetNetSalary} onChange={(event) => setNumber('targetNetSalary', event.target.value)} />
       </label>
       <div className="grid grid-cols-2 gap-3">
         <label className="field">

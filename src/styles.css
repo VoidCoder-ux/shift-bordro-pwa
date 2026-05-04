@@ -15,6 +15,7 @@ body {
   margin: 0;
   min-width: 320px;
   background: #f8fafc;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -24,17 +25,21 @@ textarea {
   font: inherit;
 }
 
+.app-shell {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
 @layer components {
   .btn-secondary {
-    @apply inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-[0.99];
+    @apply inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-[0.99];
   }
 
   .icon-btn {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50;
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50;
   }
 
   .panel-tab {
-    @apply inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-slate-500 transition hover:text-slate-900;
+    @apply inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-slate-500 transition hover:text-slate-900;
   }
 
   .panel-tab-active {
@@ -43,6 +48,10 @@ textarea {
 
   .calendar-day {
     @apply flex min-h-24 flex-col items-start gap-1 overflow-hidden rounded-lg border p-2 text-left transition hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600;
+  }
+
+  .calendar-status {
+    @apply w-full truncate text-[11px] leading-tight;
   }
 
   .calendar-day-active {
@@ -56,13 +65,33 @@ textarea {
   .field input,
   .field select,
   .field textarea {
-    @apply min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20;
+    @apply min-h-12 rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 disabled:bg-slate-100;
+  }
+
+  .status-choice {
+    @apply min-h-12 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-sm font-medium text-slate-700 transition active:scale-[0.99];
+  }
+
+  .status-choice-active {
+    @apply border-teal-700 bg-teal-700 text-white shadow-sm;
+  }
+
+  .step-btn {
+    @apply flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-white text-xl font-semibold text-slate-700 transition active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-300;
   }
 }
 
 @media (max-width: 640px) {
   .calendar-day {
-    min-height: 5.75rem;
-    padding: 0.4rem;
+    min-height: 4.75rem;
+    padding: 0.35rem;
+  }
+
+  .calendar-status {
+    font-size: 0.625rem;
+  }
+
+  .btn-secondary {
+    font-size: 0.8125rem;
   }
 }

@@ -1,10 +1,12 @@
-const CACHE_NAME = 'shift-bordro-v1';
+const CACHE_NAME = 'shift-bordro-v2';
 const BASE_PATH = '/shift-bordro-pwa/';
 const APP_SHELL = [
   BASE_PATH,
   `${BASE_PATH}index.html`,
   `${BASE_PATH}manifest.webmanifest`,
-  `${BASE_PATH}icon.svg`
+  `${BASE_PATH}icon.svg`,
+  `${BASE_PATH}apple-touch-icon.png`,
+  `${BASE_PATH}pwa-512.png`
 ];
 
 self.addEventListener('install', (event) => {
