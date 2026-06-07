@@ -40,7 +40,7 @@ textarea {
 
 @layer components {
   .btn-secondary {
-    @apply inline-flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm font-bold leading-tight text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-[0.99];
+    @apply inline-flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-4 py-2 text-center text-sm font-bold leading-tight text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:text-slate-900 hover:shadow-md hover:shadow-teal-500/10 active:translate-y-0 active:scale-[0.98];
   }
 
   .btn-secondary span {
@@ -49,15 +49,15 @@ textarea {
   }
 
   .icon-btn {
-    @apply inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900;
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50 text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-700 hover:shadow-md hover:shadow-teal-500/10 active:translate-y-0 active:scale-[0.96];
   }
 
   .panel-tab {
-    @apply inline-flex min-h-10 min-w-0 items-center gap-2 rounded-lg px-3 text-sm font-bold text-slate-600 transition hover:text-slate-900;
+    @apply inline-flex min-h-10 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold text-slate-500 transition-all duration-200 hover:text-slate-800 active:scale-[0.98];
   }
 
   .panel-tab-active {
-    @apply bg-white text-teal-700 shadow-sm hover:text-teal-700;
+    @apply bg-gradient-to-b from-white to-slate-50 text-teal-700 shadow-sm ring-1 ring-slate-200/80 hover:text-teal-700;
   }
 
   .calendar-weekdays,
@@ -118,15 +118,15 @@ textarea {
   }
 
   .status-choice {
-    @apply min-h-12 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm font-bold text-slate-600 transition hover:bg-slate-50 active:scale-[0.99];
+    @apply min-h-12 min-w-0 max-w-full rounded-xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-3 py-2 text-center text-sm font-bold text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-slate-900 hover:shadow-md active:translate-y-0 active:scale-[0.98];
   }
 
   .status-choice-active {
-    @apply shadow-sm;
+    @apply -translate-y-0.5 shadow-md ring-1 ring-inset;
   }
 
   .step-btn {
-    @apply flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl font-extrabold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400;
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50 text-xl font-extrabold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-700 hover:shadow-md hover:shadow-teal-500/10 active:translate-y-0 active:scale-[0.95] disabled:translate-y-0 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none;
   }
 }
 
