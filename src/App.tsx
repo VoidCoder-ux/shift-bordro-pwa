@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import {
   calculateMonthPayroll,
-  defaultEntriesForMonth,
   estimateDayNet,
   formatTRY,
   parseTurkishNumber,
@@ -44,7 +43,7 @@ import {
   type PayrollSettings,
   type ShiftDayEntry
 } from './lib/payroll';
-import { loadState, resetStorage, saveEntries, saveSettings } from './lib/storage';
+import { loadEntriesForMonth, loadState, resetStorage, saveEntries, saveSettings } from './lib/storage';
 
 const STATUS_OPTIONS: DayStatus[] = ['blank', 'worked', 'paid_leave', 'unpaid_leave', 'rest', 'public_holiday'];
 
@@ -103,7 +102,7 @@ export default function App() {
     setSettings(next);
     saveSettings(next);
     if (resetMonth) {
-      const nextEntries = defaultEntriesForMonth(next);
+      const nextEntries = loadEntriesForMonth(next);
       setEntries(nextEntries);
       saveEntries(nextEntries);
       setSelectedDate(nextEntries[0]?.date ?? toISODate(next.year, next.month, 1));
