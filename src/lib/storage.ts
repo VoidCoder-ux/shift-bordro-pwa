@@ -2,13 +2,20 @@ import { DEFAULT_SETTINGS, defaultEntriesForMonth, sanitizePayrollSettings, type
 
 const SETTINGS_KEY = 'shift-bordro:settings';
 const ENTRIES_KEY = 'shift-bordro:entries';
+const MONTHS_KEY = 'shift-bordro:months';
 const VERSION_KEY = 'shift-bordro:version';
-const STORAGE_VERSION = '3';
+const STORAGE_VERSION = '4';
 const LEGACY_REFERENCE_NET = 44160;
+
+type MonthsMap = Record<string, ShiftDayEntry[]>;
 
 export interface StoredState {
   settings: PayrollSettings;
   entries: ShiftDayEntry[];
+}
+
+function monthKey(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, '0')}`;
 }
 
 export function loadState(): StoredState {
@@ -20,14 +27,13 @@ export function loadState(): StoredState {
   }
 
   const storedSettings = readJson<PayrollSettings>(SETTINGS_KEY);
-  const storedEntries = readJson<ShiftDayEntry[]>(ENTRIES_KEY);
   const storedVersion = window.localStorage.getItem(VERSION_KEY);
   const migratedSettings = migrateSettings(storedSettings, storedVersion);
   const settings = sanitizePayrollSettings({ ...DEFAULT_SETTINGS, ...migratedSettings });
-  const entries = storedEntries ?? defaultEntriesForMonth(settings);
+  const entries = loadEntriesForMonth(settings);
   if (storedVersion !== STORAGE_VERSION) {
     saveSettings(settings);
-    saveEntries(storedEntries ?? entries);
+    saveEntries(entries);
   }
   return { settings, entries };
 }
@@ -38,16 +44,41 @@ export function saveSettings(settings: PayrollSettings): void {
 }
 
 export function saveEntries(entries: ShiftDayEntry[]): void {
-  window.localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+  if (!entries.length) return;
+  const map = loadMonthsMap();
+  map[entries[0].date.slice(0, 7)] = entries;
+  window.localStorage.setItem(MONTHS_KEY, JSON.stringify(map));
   window.localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+}
+
+export function loadEntriesForMonth(settings: PayrollSettings): ShiftDayEntry[] {
+  if (typeof window === 'undefined') return defaultEntriesForMonth(settings);
+  const map = loadMonthsMap();
+  return map[monthKey(settings.year, settings.month)] ?? defaultEntriesForMonth(settings);
 }
 
 export function resetStorage(): StoredState {
   const settings = { ...DEFAULT_SETTINGS };
   const entries = defaultEntriesForMonth(settings);
+  window.localStorage.removeItem(MONTHS_KEY);
+  window.localStorage.removeItem(ENTRIES_KEY);
   saveSettings(settings);
   saveEntries(entries);
   return { settings, entries };
+}
+
+function loadMonthsMap(): MonthsMap {
+  const existing = readJson<MonthsMap>(MONTHS_KEY);
+  if (existing) return existing;
+
+  // Eski tek-ay (v3) kayitlarini ay haritasina goc ettir.
+  const legacy = readJson<ShiftDayEntry[]>(ENTRIES_KEY);
+  const map: MonthsMap = {};
+  if (legacy && legacy.length) {
+    map[legacy[0].date.slice(0, 7)] = legacy;
+    window.localStorage.setItem(MONTHS_KEY, JSON.stringify(map));
+  }
+  return map;
 }
 
 function readJson<T>(key: string): T | null {
