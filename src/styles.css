@@ -40,7 +40,7 @@ textarea {
 
 @layer components {
   .btn-secondary {
-    @apply inline-flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-sm font-extrabold leading-tight text-slate-900 transition hover:bg-slate-50 active:scale-[0.99];
+    @apply inline-flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm font-bold leading-tight text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-[0.99];
   }
 
   .btn-secondary span {
@@ -49,15 +49,15 @@ textarea {
   }
 
   .icon-btn {
-    @apply inline-flex h-11 w-11 items-center justify-center rounded-lg border-2 border-slate-300 bg-white text-slate-900 transition hover:bg-slate-50;
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900;
   }
 
   .panel-tab {
-    @apply inline-flex min-h-10 min-w-0 items-center gap-2 rounded-md px-3 text-sm font-extrabold text-slate-800 transition hover:text-slate-950;
+    @apply inline-flex min-h-10 min-w-0 items-center gap-2 rounded-lg px-3 text-sm font-bold text-slate-600 transition hover:text-slate-900;
   }
 
   .panel-tab-active {
-    @apply bg-teal-700 text-white hover:text-white;
+    @apply bg-white text-teal-700 shadow-sm hover:text-teal-700;
   }
 
   .calendar-weekdays,
@@ -71,42 +71,46 @@ textarea {
   }
 
   .calendar-weekdays {
-    @apply text-center text-[13px] font-extrabold uppercase text-slate-800;
+    @apply text-center text-[13px] font-bold uppercase tracking-wide text-slate-400;
   }
 
   .calendar-empty {
     min-width: 0;
-    min-height: 5rem;
+    min-height: 5.5rem;
   }
 
   .calendar-day {
-    @apply flex min-h-24 min-w-0 flex-col items-start gap-1 overflow-hidden rounded-lg border-2 p-2 text-left shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-700;
+    @apply flex min-h-[5.5rem] min-w-0 flex-col items-start gap-1 overflow-hidden rounded-xl border p-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-400;
   }
 
   .calendar-date {
-    @apply text-base font-extrabold leading-none text-slate-950;
+    @apply text-base font-extrabold leading-none;
   }
 
   .calendar-status {
-    @apply w-full truncate text-[12px] font-bold leading-tight;
+    @apply w-full truncate text-[11px] font-bold leading-tight opacity-80;
+  }
+
+  .calendar-net {
+    @apply w-full truncate text-[12px] font-extrabold leading-tight text-emerald-600;
   }
 
   .calendar-chip {
-    @apply rounded bg-white/80 px-1 text-[11px] font-bold leading-tight text-slate-950;
+    @apply rounded-md bg-white/70 px-1.5 text-[10px] font-bold leading-tight;
   }
 
   .calendar-day-active {
-    @apply border-teal-800 ring-4 ring-teal-700/35;
+    @apply ring-2 ring-teal-500 ring-offset-1;
   }
 
   .field {
-    @apply flex min-w-0 flex-col gap-1 text-sm font-extrabold text-slate-900;
+    @apply flex min-w-0 flex-col gap-1 text-sm font-bold text-slate-700;
   }
 
   .field input,
   .field select,
   .field textarea {
-    @apply min-h-12 rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 disabled:bg-slate-100;
+    @apply min-h-12 rounded-xl border border-slate-200 bg-white px-3 py-2 text-base font-medium text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 disabled:bg-slate-100;
   }
 
   .status-grid {
@@ -114,15 +118,15 @@ textarea {
   }
 
   .status-choice {
-    @apply min-h-12 min-w-0 max-w-full rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-center text-base font-extrabold text-slate-900 transition active:scale-[0.99];
+    @apply min-h-12 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm font-bold text-slate-600 transition hover:bg-slate-50 active:scale-[0.99];
   }
 
   .status-choice-active {
-    @apply border-teal-700 bg-teal-700 text-white shadow-sm;
+    @apply shadow-sm;
   }
 
   .step-btn {
-    @apply flex h-12 w-12 items-center justify-center rounded-lg border-2 border-slate-300 bg-white text-xl font-extrabold text-slate-900 transition active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400;
+    @apply flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl font-extrabold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400;
   }
 }
 
@@ -137,13 +141,13 @@ textarea {
   }
 
   .calendar-empty {
-    min-height: 4.8rem;
+    min-height: 5rem;
   }
 
   .calendar-day {
-    min-height: 4.8rem;
+    min-height: 5rem;
     padding: 0.32rem;
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
   }
 
   .calendar-date {
@@ -151,11 +155,15 @@ textarea {
   }
 
   .calendar-status {
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     white-space: normal;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
+  }
+
+  .calendar-net {
+    font-size: 0.6875rem;
   }
 
   .btn-secondary {

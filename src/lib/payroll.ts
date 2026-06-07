@@ -295,6 +295,28 @@ function alignLineNetTotal(lines: PayrollLine[], netPay: number): PayrollLine[] 
   return lines;
 }
 
+/**
+ * Bir gunun bordroya net katkisini tahmin eder. calculateMonthPayroll icindeki
+ * addLineNet mantigini birebir yansitir; takvim hucresinde gunluk neti gostermek
+ * icin kullanilir. Ucretli gun ust siniri (payrollMonthDays) burada uygulanmaz,
+ * bu yuzden tek gun bazinda tutarli bir tahmindir.
+ */
+export function estimateDayNet(entry: ShiftDayEntry, dailyNet: number, settings: PayrollSettings): number {
+  if (entry.status === 'blank' || entry.status === 'unpaid_leave') return 0;
+
+  let net = dailyNet;
+  if (entry.status === 'public_holiday' && entry.workedOnPublicHoliday) {
+    net += round2(dailyNet * settings.holidayWorkMultiplier);
+  }
+
+  const overtime = clampNumber(entry.overtimeHours, 0, 24, 0);
+  if (overtime > 0) {
+    net += round2((overtime * dailyNet * settings.overtimeMultiplier) / settings.dailyStandardHours);
+  }
+
+  return round2(net);
+}
+
 export function calculateMonthPayroll(
   entries: ShiftDayEntry[],
   rawSettings: PayrollSettings
